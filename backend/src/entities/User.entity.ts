@@ -15,47 +15,51 @@ export enum UserRole {
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
-    id: string
+    id!: string
 
     @Column({ unique: true })
-    email: string
+    email!: string
 
     @Column({ name: 'password_hash' })
-    passwordHash: string
+    passwordHash!: string
 
     @Column({ name: 'first_name' })
-    firstName: string
+    firstName!: string
 
     @Column({ name: 'last_name' })
-    lastName: string
+    lastName!: string
 
     @Column({ nullable: true })
-    phone: string
+    phone?: string
 
-    @Column({ type: 'enum', enum: UserRole, default: UserRole.CUSTOMER })
-    role: UserRole
+    @Column({
+        type: 'enum',
+        enum: UserRole,
+        default: UserRole.CUSTOMER,
+    })
+    role!: UserRole
 
     @Column({ name: 'is_email_verified', default: false })
-    isEmailVerified: boolean
+    isEmailVerified!: boolean
 
     @CreateDateColumn({ name: 'created_at' })
-    createdAt: Date
+    createdAt!: Date
 
     @UpdateDateColumn({ name: 'updated_at' })
-    updatedAt: Date
+    updatedAt!: Date
 
-    @OneToMany(() => Order, (order) => order.user)
-    orders: Order[]
+    @OneToMany('Order', 'user')
+    orders!: any[]
 
-    @OneToMany(() => Review, (review) => review.user)
-    reviews: Review[]
+    @OneToMany('Review', 'user')
+    reviews!: any[]
 
-    @OneToMany(() => Adress, (adress) => adress.user)
-    adresses: Adress[]
+    @OneToMany('Address', 'user')
+    addresses!: any[]
 
-    @OneToMany(() => Cart, (cart) => cart.user)
-    carts: Cart[]
+    @OneToMany('Cart', 'user')
+    carts!: any[]
 
-    @OneToMany(() => RefreshToken, (token) => token.user)
-    refreshTokens: RefreshToken[]
+    @OneToMany('RefreshToken', 'user')
+    refreshTokens!: any[]
 }
