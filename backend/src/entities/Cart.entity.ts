@@ -9,6 +9,7 @@ import {
     JoinColumn,
 } from 'typeorm'
 import { User } from './User.entity'
+import { CartItem } from './CartItem.entity'
 
 @Entity('carts')
 export class Cart {
@@ -32,5 +33,5 @@ export class Cart {
     updatedAt!: Date
 
     @OneToMany('CartItem', 'cart', { cascade: true })
-    items!: any[]
+    items!: CartItem[]
 }

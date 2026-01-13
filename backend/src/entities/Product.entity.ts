@@ -9,6 +9,9 @@ import {
     JoinColumn,
 } from 'typeorm'
 import { Category } from './Category.entity'
+import { CartItem } from './CartItem.entity'
+import { OrderItem } from './OrderItem.entity'
+import { Review } from './Review.entity'
 
 @Entity('products')
 export class Product {
@@ -83,18 +86,18 @@ export class Product {
     updatedAt!: Date
 
     // Relations - string references
-    @OneToMany('ProductImage', 'product', { cascade: true })
-    images!: any[]
+    //@OneToMany('ProductImage', 'product', { cascade: true })
+    //images!: ProductImage[]
 
-    @OneToMany('ProductVariant', 'product', { cascade: true })
-    variants!: any[]
+    //@OneToMany('ProductVariant', 'product', { cascade: true })
+    //variants!: ProductVariant[]
 
     @OneToMany('Review', 'product')
-    reviews!: any[]
+    reviews!: Review[]
 
     @OneToMany('OrderItem', 'product')
-    orderItems!: any[]
+    orderItems!: OrderItem[]
 
     @OneToMany('CartItem', 'product')
-    cartItems!: any[]
+    cartItems!: CartItem[]
 }

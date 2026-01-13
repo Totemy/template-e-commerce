@@ -6,6 +6,11 @@ import {
     UpdateDateColumn,
     OneToMany,
 } from 'typeorm'
+import { Order } from './Order.entity'
+import { Review } from './Review.entity'
+import { Address } from './Address.entity'
+import { Cart } from './Cart.entity'
+import { RefreshToken } from './RefreshToken.entity'
 
 export enum UserRole {
     CUSTOMER = 'customer',
@@ -49,17 +54,17 @@ export class User {
     updatedAt!: Date
 
     @OneToMany('Order', 'user')
-    orders!: any[]
+    orders!: Order[]
 
     @OneToMany('Review', 'user')
-    reviews!: any[]
+    reviews!: Review[]
 
     @OneToMany('Address', 'user')
-    addresses!: any[]
+    addresses!: Address[]
 
     @OneToMany('Cart', 'user')
-    carts!: any[]
+    carts!: Cart[]
 
     @OneToMany('RefreshToken', 'user')
-    refreshTokens!: any[]
+    refreshTokens!: RefreshToken[]
 }

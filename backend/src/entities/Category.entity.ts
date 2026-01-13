@@ -8,6 +8,7 @@ import {
     ManyToOne,
     JoinColumn,
 } from 'typeorm'
+import { Product } from './Product.entity'
 
 @Entity('categories')
 export class Category {
@@ -50,5 +51,5 @@ export class Category {
 
     // Relations
     @OneToMany('Product', 'category')
-    products!: any[]
+    products!: Product[]
 }

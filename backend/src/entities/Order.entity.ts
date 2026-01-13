@@ -9,6 +9,7 @@ import {
     JoinColumn,
 } from 'typeorm'
 import { User } from './User.entity'
+import { OrderItem } from './OrderItem.entity'
 
 export enum OrderStatus {
     PENDING = 'pending',
@@ -137,5 +138,5 @@ export class Order {
 
     // Relations
     @OneToMany('OrderItem', 'order', { cascade: true })
-    items!: any[]
+    items!: OrderItem[]
 }
