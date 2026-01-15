@@ -4,26 +4,15 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
-    ManyToOne,
-    OneToMany,
-    JoinColumn,
 } from 'typeorm'
-import { Category } from './Category.entity'
-import { CartItem } from './CartItem.entity'
-import { OrderItem } from './OrderItem.entity'
-import { Review } from './Review.entity'
 
 @Entity('products')
 export class Product {
     @PrimaryGeneratedColumn('uuid')
     id!: string
 
-    @Column({ name: 'category_id' })
+    @Column()
     categoryId!: string
-
-    @ManyToOne(() => Category, (category) => category.products)
-    @JoinColumn({ name: 'category_id' })
-    category!: Category
 
     @Column({ unique: true })
     sku!: string
@@ -37,67 +26,30 @@ export class Product {
     @Column({ type: 'text' })
     description!: string
 
-    @Column({ name: 'short_description', nullable: true })
-    shortDescription?: string
-
     @Column({ type: 'decimal', precision: 10, scale: 2 })
     price!: number
 
-    @Column({
-        name: 'compare_at_price',
-        type: 'decimal',
-        precision: 10,
-        scale: 2,
-        nullable: true,
-    })
-    compareAtPrice?: number
-
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-    cost?: number
+    compareAtPrice?: number
 
     @Column({ type: 'decimal', precision: 5, scale: 2 })
     weight!: number
 
-    @Column({ name: 'metal_purity' })
-    metalPurity!: string
+    @Column()
+    metal!: string // "925 проба"
 
-    @Column({ name: 'is_available', default: true })
+    @Column({ default: true })
     isAvailable!: boolean
 
-    @Column({ name: 'is_featured', default: false })
+    @Column({ default: false })
     isFeatured!: boolean
 
-    @Column({ name: 'is_new_arrival', default: false })
+    @Column({ default: false })
     isNewArrival!: boolean
 
-    @Column({ name: 'view_count', default: 0 })
-    viewCount!: number
-
-    @Column({ name: 'meta_title', nullable: true })
-    metaTitle?: string
-
-    @Column({ name: 'meta_description', nullable: true })
-    metaDescription?: string
-
-    @CreateDateColumn({ name: 'created_at' })
+    @CreateDateColumn()
     createdAt!: Date
 
-    @UpdateDateColumn({ name: 'updated_at' })
+    @UpdateDateColumn()
     updatedAt!: Date
-
-    // Relations - string references
-    //@OneToMany('ProductImage', 'product', { cascade: true })
-    //images!: ProductImage[]
-
-    //@OneToMany('ProductVariant', 'product', { cascade: true })
-    //variants!: ProductVariant[]
-
-    @OneToMany('Review', 'product')
-    reviews!: Review[]
-
-    @OneToMany('OrderItem', 'product')
-    orderItems!: OrderItem[]
-
-    @OneToMany('CartItem', 'product')
-    cartItems!: CartItem[]
 }
