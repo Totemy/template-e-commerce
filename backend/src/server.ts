@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { createApp } from './app'
-import { initializeDatabase } from './config/database'
+import { initializeDatabase } from './database/data-source'
 import { config } from './config/env'
 
 const startServer = async () => {
