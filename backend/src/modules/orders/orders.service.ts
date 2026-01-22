@@ -58,7 +58,7 @@ export class OrderService {
             }),
         )
 
-        await this.itemRepo.save(item)
+        await this.itemRepo.save(items)
 
         return {
             ...savedOrder,
@@ -114,7 +114,7 @@ export class OrderService {
             })
 
             if (!product || !product.isAvailable) {
-                throw new Error(`Prodcut ${item.productId} not available`)
+                throw new Error(`Product ${item.productId} not available`)
             }
 
             let variant = null
@@ -159,7 +159,7 @@ export class OrderService {
     // count of price delivery
 
     private calculateShipping(subtotal: number): number {
-        // free delivership
+        // free delivers
         if (subtotal >= 2000) {
             return 0
         }
