@@ -4,8 +4,10 @@ import { config } from '../../config/env'
 export interface JwtPayload {
     userId: string
     email: string
-    role: string
 }
+/**
+ * generate Access Token (15 min)
+ */
 
 export const generateAccessToken = (payload: JwtPayload): string => {
     return jwt.sign(payload, config.jwt.accessSecret, {

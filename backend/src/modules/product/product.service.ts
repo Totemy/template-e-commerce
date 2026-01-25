@@ -158,7 +158,7 @@ export class ProductService {
         return await this.variantRepo.save(variantEntities)
     }
 
-    async updateVarian(
+    async updateVariant(
         variantId: string,
         data: Partial<{
             name: string
