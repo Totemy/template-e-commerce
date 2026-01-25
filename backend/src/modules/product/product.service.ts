@@ -95,6 +95,32 @@ export class ProductService {
         return await this.productRepo.save(product)
     }
 
+    async update(id: string, data: Partial<Product>) {
+        const product = await this.productRepo.findOne({ where: { id } })
+
+        if (!product) {
+            throw new Error('Product not found')
+        }
+
+        if (data.slug && data.slug !== product.slug) {
+            const existing = await this.productRepo.findOne({
+                where: { slug: data.slug },
+            })
+
+            if (existing && existing.id !== id) {
+                throw new Error('Product with this slug already exists')
+            }
+        }
+
+        Object.assign(product, data)
+
+        return await this.productRepo.save(product)
+    }
+
+    async delete(id: string) {
+        await this.productRepo.delete(id)
+    }
+
     async addImages(
         productId: string,
         images: { url: string; altText?: string }[],
@@ -111,6 +137,9 @@ export class ProductService {
         return await this.imageRepo.save(imageEntities)
     }
 
+    async deleteImage(imageId: string) {
+        await this.imageRepo.delete(imageId)
+    }
     async addVariants(
         productId: string,
         variants: {
@@ -127,5 +156,52 @@ export class ProductService {
             }),
         )
         return await this.variantRepo.save(variantEntities)
+    }
+
+    async updateVarian(
+        variantId: string,
+        data: Partial<{
+            name: string
+            stockQuantity: number
+            priceAdjustment: number
+            isAvailable: boolean
+        }>,
+    ) {
+        const variant = await this.variantRepo.findOne({
+            where: { id: variantId },
+        })
+        if (!variant) {
+            throw new Error('Variant not found')
+        }
+
+        Object.assign(variant, data)
+
+        return await this.variantRepo.save(variant)
+    }
+
+    async deleteVariant(variantId: string) {
+        await this.variantRepo.delete(variantId)
+    }
+
+    private async attachImageAndVariants(products: Product[]) {
+        if (products.length === 0) return []
+
+        const productsIds = products.map((p) => p.id)
+
+        const images = await this.productRepo
+            .createQueryBuilder('image')
+            .where('image.productId in (:...productIds)', { productsIds })
+            .orderBy('image.displayOrder', 'ASC')
+            .getMany()
+        const variants = await this.variantRepo
+            .createQueryBuilder('variant')
+            .where('variant.productId IN (:...productIds)', { productsIds })
+            .getMany()
+
+        return products.map((product) => ({
+            ...product,
+            images: images.filter((img) => img.id === product.id),
+            variants: variants.filter((v) => v.productId === product.id),
+        }))
     }
 }
