@@ -1,10 +1,14 @@
 import { AppDataSource } from '../../database/data-source'
-import { Order, OrderStatus } from '../../database/entities/Order.entity'
+import {
+    Order,
+    OrderStatus,
+    PaymentMethod,
+} from '../../database/entities/Order.entity'
 import { OrderItem } from '../../database/entities/OrderItem.entity'
 import { Product } from '../../database/entities/Product.entity'
 import { ProductVariant } from '../../database/entities/ProductVariant.entity'
 
-export class OrderService {
+export class OrdersService {
     private orderRepo = AppDataSource.getRepository(Order)
     private itemRepo = AppDataSource.getRepository(OrderItem)
     private productRepo = AppDataSource.getRepository(Product)
@@ -14,14 +18,14 @@ export class OrderService {
         customerName: string
         customerEmail: string
         customerPhone: string
-        paymentMethod: 'card' | 'cash_on_delivery'
+        paymentMethod: PaymentMethod
         shippingAddress: {
             city: string
             address: string
             postalCode: string
         }
         customerNotes?: string
-        item: {
+        items: {
             productId: string
             variantId?: string
             quantity: number
@@ -41,7 +45,7 @@ export class OrderService {
             customerEmail: data.customerEmail,
             customerPhone: data.customerPhone,
             paymentMethod: data.paymentMethod,
-            shippingCost: data.shippingAddress,
+            shippingAddress: data.shippingAddress,
             customerNotes: data.customerNotes,
             subtotal,
             shippingCost,
@@ -78,6 +82,22 @@ export class OrderService {
         return await query.getMany()
     }
 
+    async findByID(id: string) {
+        const order = await this.orderRepo.findOne({ where: { id } })
+
+        if (!order) {
+            throw new Error('Order not found')
+        }
+
+        const items = await this.itemRepo.find({
+            where: { orderId: id },
+        })
+
+        return {
+            ...order,
+            items,
+        }
+    }
     async updateStatus(id: string, status: OrderStatus) {
         const order = await this.orderRepo.findOne({ where: { id } })
 
@@ -178,8 +198,8 @@ export class OrderService {
 
         const count = await this.orderRepo
             .createQueryBuilder('order')
-            .where('order.createAt >= :start', { start: startOfDay })
-            .andWhere('order.createAt <= :end', { end: endOfDay })
+            .where('order.createdAt >= :start', { start: startOfDay })
+            .andWhere('order.createdAt <= :end', { end: endOfDay })
             .getCount()
         const sequence = String(count + 1).padStart(4, '0')
 
