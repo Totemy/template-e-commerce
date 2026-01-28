@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { ProductsController } from './products.controller'
+import { ProductController } from './product.controller'
 
 const router = Router()
-const productsController = new ProductsController()
+const productsController = new ProductController()
 
 /**
  * POST /api/admin/products
@@ -26,7 +26,7 @@ router.delete('/:id', (req, res) => productsController.delete(req, res))
  * POST /api/admin/products/:id/images
  * Додати фото до товару
  */
-router.post('/:id/images', (req, res) => productsController.addImages(req, res))
+router.post('/:id/images', (req, res) => productsController.addImage(req, res))
 
 /**
  * DELETE /api/admin/products/images/:imageId
