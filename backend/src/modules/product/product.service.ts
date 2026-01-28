@@ -86,6 +86,7 @@ export class ProductService {
         price: number
         weight: number
         metal: string
+        compareAtPrice?: number
     }) {
         const product = this.productRepo.create({
             ...data,

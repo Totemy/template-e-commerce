@@ -41,7 +41,7 @@ export class ProductController {
         try {
             const { slug } = req.params
 
-            const product = await productService.addImages.findBySlug(slug)
+            const product = await productService.findBySlug(slug)
 
             res.status(200).json({
                 data: product,
@@ -76,8 +76,8 @@ export class ProductController {
                 !name ||
                 !slug ||
                 !description ||
-                !price ||
-                !weight ||
+                price === undefined ||
+                weight === undefined ||
                 !metal
             ) {
                 return res.status(400).json({
