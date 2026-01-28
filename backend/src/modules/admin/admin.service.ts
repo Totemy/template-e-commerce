@@ -27,13 +27,15 @@ export class AdminService {
         }
 
         const accessToken = generateAccessToken({
-            adminId: admin.id,
+            userId: admin.id,
             email: admin.email,
+            role: 'admin',
         })
 
         const refreshToken = generateRefreshToken({
-            adminId: admin.id,
+            userId: admin.id,
             email: admin.email,
+            role: 'admin',
         })
 
         await this.saveRefreshToken(admin.id, refreshToken)
@@ -92,8 +94,9 @@ export class AdminService {
         }
 
         const accessToken = generateAccessToken({
-            adminId: admin.id,
+            userId: admin.id,
             email: admin.email,
+            role: 'admin',
         })
 
         return { accessToken }

@@ -6,18 +6,18 @@ const adminController = new AdminController()
 
 // POST /api/admin/setup
 
-router.post('/setup', (req, res) => adminController.setup(req, res))
+router.post('/setup', adminController.setup.bind(adminController))
 
 //POST /api/admin/login
 
-router.post('/login', (res, req) => adminController.login(req, res))
+router.post('/login', adminController.login.bind(adminController))
 
 //POST /api/admin/refresh
 
-router.post('/refresh', (req, res) => adminController.refresh(res, req))
+router.post('/refresh', adminController.refresh.bind(adminController))
 
 //POST /api/admin/logout
 
-router.post('/logout', (res, req) => adminController.logout(res, req))
+router.post('/logout', adminController.logout.bind(adminController))
 
 export default router

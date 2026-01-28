@@ -1,38 +1,31 @@
-import jwt from 'jsonwebtoken'
+import jwt, { Secret } from 'jsonwebtoken'
 import { config } from '../../config/env'
 
 export interface JwtPayload {
     userId: string
     email: string
+    role: 'admin' | 'user'
 }
-/**
- * generate Access Token (15 min)
- */
+
+const accessSecret = config.jwt.accessSecret as Secret
+const refreshSecret = config.jwt.refreshSecret as Secret
 
 export const generateAccessToken = (payload: JwtPayload): string => {
-    return jwt.sign(payload, config.jwt.accessSecret, {
-        expiresIn: config.jwt.accessExpire,
+    return jwt.sign(payload, accessSecret, {
+        expiresIn: config.jwt.accessExpire as any,
     })
 }
 
 export const generateRefreshToken = (payload: JwtPayload): string => {
-    return jwt.sign(payload, config.jwt.refreshSecret, {
-        expiresIn: config.jwt.refreshExpire,
+    return jwt.sign(payload, refreshSecret, {
+        expiresIn: config.jwt.refreshExpire as any,
     })
 }
 
 export const verifyAccessToken = (token: string): JwtPayload => {
-    try {
-        return jwt.verify(token, config.jwt.accessSecret) as JwtPayload
-    } catch (error) {
-        throw new Error('Invalid or expired access token')
-    }
+    return jwt.verify(token, accessSecret) as JwtPayload
 }
 
 export const verifyRefreshToken = (token: string): JwtPayload => {
-    try {
-        return jwt.verify(token, config.jwt.refreshSecret) as JwtPayload
-    } catch (error) {
-        throw new Error('Invalid or expired refresh token')
-    }
+    return jwt.verify(token, refreshSecret) as JwtPayload
 }
