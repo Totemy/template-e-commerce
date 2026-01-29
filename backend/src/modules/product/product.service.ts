@@ -14,29 +14,29 @@ export class ProductService {
         isNewArrival?: boolean
     }) {
         const query = this.productRepo
-            .createQueryBuilder('product')
-            .where('product.isAvailable = :isAvailable', { isAvailable: true })
+            .createQueryBuilder()
+            .where({ isAvailable: true })
 
         if (filters?.categoryId) {
-            query.andWhere('product.categoryId = :categoryId', {
+            query.andWhere({
                 categoryId: filters.categoryId,
             })
         }
         if (filters?.isFeatured) {
-            query.andWhere('product.isFeatured = :isFeatured', {
+            query.andWhere({
                 isFeatured: true,
             })
         }
         if (filters?.isNewArrival) {
-            query.andWhere('product.isNewArrival = :isNewArrival', {
+            query.andWhere({
                 isNewArrival: true,
             })
         }
 
-        const product = await query.getMany()
+        const products = await query.getMany()
 
         //upload images and variants
-        const productIds = product.map((p) => p.id)
+        const productIds = products.map((p) => p.id)
 
         const images = await this.imageRepo
             .createQueryBuilder('image')
@@ -49,11 +49,12 @@ export class ProductService {
             .getMany()
 
         //all in one
-        return product.map((product) => ({
+        return products.map((product) => ({
             ...product,
             images: images.filter((img) => img.productId === product.id),
             variants: variants.filter((v) => v.productId === product.id),
         }))
+        //return products
     }
 
     async findBySlug(slug: string) {

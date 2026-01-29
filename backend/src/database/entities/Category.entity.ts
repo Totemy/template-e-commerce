@@ -30,8 +30,8 @@ export class Category {
     isActive!: boolean
 
     @CreateDateColumn()
-    createdAt!: Date
+    createdAt?: Date | null
 
     @UpdateDateColumn()
-    updatedAt!: Date
+    updatedAt?: Date | null
 }

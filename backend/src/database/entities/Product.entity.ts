@@ -48,8 +48,8 @@ export class Product {
     isNewArrival!: boolean
 
     @CreateDateColumn()
-    createdAt!: Date
+    createdAt!: Date | null
 
     @UpdateDateColumn()
-    updatedAt!: Date
+    updatedAt!: Date | null
 }

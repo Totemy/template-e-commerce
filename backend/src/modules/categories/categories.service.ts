@@ -2,7 +2,7 @@ import { AppDataSource } from '../../database/data-source'
 import { Category } from '../../database/entities/Category.entity'
 
 export class CategoriesService {
-    private repo = AppDataSource.getRepository(Category)
+    private repo = AppDataSource.getRepository(Category) // change name repo
 
     async findAll() {
         return await this.repo.find({
