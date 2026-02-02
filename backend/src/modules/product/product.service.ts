@@ -14,29 +14,17 @@ export class ProductService {
         isFeatured?: boolean
         isNewArrival?: boolean
     }) {
-        const query = this.productRepo
-            .createQueryBuilder('product')
-            .leftJoinAndSelect('product.categories', 'category')
-            .leftJoinAndSelect('product.variants', 'variant')
-            .where('product.isAvailable = :isAvailable', { isAvailable: true })
+        const where: any = { isAvailable: true }
 
-        if (filters?.categoryId) {
-            query.andWhere('category.id = :categoryId', {
-                categoryId: filters.categoryId,
-            })
-        }
-        if (filters?.isFeatured) {
-            query.andWhere('product.isFeatured = :isFeatured', {
-                isFeatured: true,
-            })
-        }
-        if (filters?.isNewArrival) {
-            query.andWhere('product.isNewArrival = :isNewArrival', {
-                isNewArrival: true,
-            })
-        }
+        if (filters?.isFeatured) where.isFeatured = true
+        if (filters?.isNewArrival) where.isNewArrival = true
+        if (filters?.categoryId) where.categories = { id: filters.categoryId }
 
-        return await query.orderBy('product.createdAt', 'DESC').getMany()
+        return this.productRepo.find({
+            relations: { categories: true, variants: true },
+            where,
+            order: { createdAt: 'DESC' },
+        })
     }
 
     async findBySlug(slug: string) {
