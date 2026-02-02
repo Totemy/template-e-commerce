@@ -3,6 +3,7 @@ import { Product, Material } from '../../database/entities/Product.entity'
 import { ProductVariant } from '../../database/entities/ProductVariant.entity'
 import { Category } from '../../database/entities/Category.entity'
 import { In } from 'typeorm'
+import { AtLeastOne } from '../../common/types/helpers'
 
 export class ProductService {
     private productRepo = AppDataSource.getRepository(Product)
@@ -28,16 +29,20 @@ export class ProductService {
     }
 
     async findBySlug(slug: string) {
-        const product = await this.productRepo.findOne({ where: { slug } })
-
-        if (!product) {
-            throw new Error('Product not found')
-        }
-        return product
+        return this.findOne({
+            slug: slug,
+        })
     }
 
     async findById(id: string) {
-        const product = await this.productRepo.findOne({ where: { id } })
+        return this.findOne({
+            id: id,
+        })
+    }
+    async findOne(filters: AtLeastOne<{ id?: string; slug?: string }>) {
+        const product = await this.productRepo.findOne({
+            where: filters,
+        })
         if (!product) {
             throw new Error('Product not found')
         }
