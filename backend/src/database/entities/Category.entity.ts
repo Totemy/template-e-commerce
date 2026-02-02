@@ -4,7 +4,10 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
+    ManyToMany,
 } from 'typeorm'
+
+import { Product } from './Product.entity'
 
 @Entity('categories')
 export class Category {
@@ -28,6 +31,9 @@ export class Category {
 
     @Column({ default: true })
     isActive!: boolean
+
+    @ManyToMany(() => Product, (product) => product.categories)
+    products!: Product[]
 
     @CreateDateColumn()
     createdAt?: Date | null

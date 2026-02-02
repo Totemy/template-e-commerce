@@ -4,18 +4,38 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
+    OneToMany,
+    ManyToMany,
+    JoinTable,
 } from 'typeorm'
+import { ProductVariant } from './ProductVariant.entity'
+import { Category } from './Category.entity'
+
+export enum Material {
+    SILVER_925 = 'silver_925',
+    GOLD_585 = 'gold_585',
+    GOLD_750 = 'gold_750',
+    PLATINUM = 'platinum',
+    STEEL = 'steel',
+}
 
 @Entity('products')
 export class Product {
     @PrimaryGeneratedColumn('uuid')
     id!: string
 
-    @Column()
-    categoryId!: string
+    @ManyToMany(() => Category, (category) => category.products)
+    @JoinTable({
+        name: 'product_categories',
+        joinColumn: { name: 'product_id', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
+    })
+    categories!: Category[]
 
-    @Column({ unique: true })
-    sku!: string
+    @OneToMany(() => ProductVariant, (variant) => variant.product, {
+        cascade: true,
+    })
+    variants!: ProductVariant[]
 
     @Column()
     name!: string
@@ -35,8 +55,18 @@ export class Product {
     @Column({ type: 'decimal', precision: 5, scale: 2 })
     weight!: number
 
-    @Column()
-    metal!: string // "925 проба"
+    @Column({
+        type: 'enum',
+        enum: Material,
+        default: Material.STEEL,
+    })
+    material!: Material
+
+    @Column('jsonb', { default: [] })
+    images!: Array<{
+        url: string
+        altText?: string
+    }>
 
     @Column({ default: true })
     isAvailable!: boolean
