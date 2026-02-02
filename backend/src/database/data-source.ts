@@ -3,11 +3,11 @@ import { config } from '../config/env'
 import { Admin } from './entities/Admin.entity'
 import { Product } from './entities/Product.entity'
 import { Category } from './entities/Category.entity'
-import { ProductImage } from './entities/ProductImage.entity'
 import { ProductVariant } from './entities/ProductVariant.entity'
 import { Order } from './entities/Order.entity'
 import { OrderItem } from './entities/OrderItem.entity'
 import { RefreshToken } from './entities/RefreshToken.entity'
+import 'dotenv/config'
 
 export const AppDataSource = new DataSource({
     type: 'postgres',
@@ -16,18 +16,20 @@ export const AppDataSource = new DataSource({
     username: config.db.user,
     password: config.db.password,
     database: config.db.name,
-    synchronize: !config.isProduction,
-    logging: !config.isProduction,
+    synchronize: true,
+    logging: true,
     entities: [
         Admin,
         Category,
         Product,
-        ProductImage,
         ProductVariant,
         Order,
         OrderItem,
         RefreshToken,
     ],
+
+    migrations: ['src/database/migration/*.ts'],
+    migrationsTableName: 'migrations',
 })
 
 export const initializeDatabase = async (): Promise<void> => {

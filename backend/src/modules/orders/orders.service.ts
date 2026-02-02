@@ -163,7 +163,6 @@ export class OrdersService {
                 variantId: variant?.id,
                 productSnapshot: {
                     name: product.name,
-                    sku: variant ? variant.sku : product.sku,
                     price,
                     image: '', // without logic
                 },
