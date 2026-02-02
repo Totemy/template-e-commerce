@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-src/database/migrations/
 
 # Build output
 dist/
