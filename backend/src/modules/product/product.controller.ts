@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { ProductService } from './product.service'
 import { error } from 'console'
+import { Material } from '../../database/entities/Product.entity'
 
 const productService = new ProductService()
 
@@ -61,41 +62,52 @@ export class ProductController {
     async create(req: Request, res: Response) {
         try {
             const {
-                categoryId,
+                categoryIds,
                 name,
                 slug,
                 description,
                 price,
                 weight,
-                metal,
+                material,
                 compareAtPrice,
+                images,
+                variants,
             } = req.body
 
             if (
-                !categoryId ||
+                !Array.isArray(categoryIds) ||
+                categoryIds.length === 0 ||
                 !name ||
                 !slug ||
                 !description ||
                 price === undefined ||
                 weight === undefined ||
-                !metal
+                !material
             ) {
                 return res.status(400).json({
-                    error: 'Missing required fields: categoryId, name, slug, description, price, weight, metal',
+                    error: 'Missing required fields',
+                })
+            }
+
+            if (!Object.values(Material).includes(material)) {
+                return res.status(400).json({
+                    error: `Invalid material. Must be one of: ${Object.values(Material).join(', ')}`,
                 })
             }
 
             const product = await productService.create({
-                categoryId,
+                categoryIds,
                 name,
                 slug,
                 description,
                 price: Number(price),
                 weight: Number(weight),
-                metal,
+                material,
                 compareAtPrice: compareAtPrice
                     ? Number(compareAtPrice)
                     : undefined,
+                images,
+                variants,
             })
 
             res.status(201).json({
@@ -155,6 +167,46 @@ export class ProductController {
         }
     }
 
+    async addCategories(req: Request, res: Response) {
+        try {
+            const { id } = req.params
+            const { categoryIds } = req.body
+
+            if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
+                return res.status(400).json({
+                    error: 'categoryIds must be a non-empty array',
+                })
+            }
+
+            const product = await productService.addCategories(id, categoryIds)
+
+            res.status(200).json({
+                message: 'Category added',
+                data: product,
+            })
+        } catch (error: any) {
+            res.status(400).json({
+                error: error.message || 'Failed to add categories',
+            })
+        }
+    }
+
+    async removeCategory(req: Request, res: Response) {
+        try {
+            const { id, categoryId } = req.params
+
+            const product = await productService.removeCategory(id, categoryId)
+
+            res.status(200).json({
+                message: 'Category removed',
+                data: product,
+            })
+        } catch (error: any) {
+            res.status(400).json({
+                error: error.message || 'Failed to remove category',
+            })
+        }
+    }
     /**
      * POST /api/admin/products/:id/images
      * add image to product
@@ -189,12 +241,20 @@ export class ProductController {
      */
     async deleteImage(req: Request, res: Response) {
         try {
-            const { imageId } = req.params
+            const { id } = req.params
+            const { imageUrl } = req.body
 
-            await productService.deleteImage(imageId)
+            if (!imageUrl) {
+                return res.status(400).json({
+                    error: 'imageUrl is required',
+                })
+            }
+
+            const product = await productService.deleteImage(id, imageUrl)
 
             res.status(200).json({
                 message: 'Image deleted',
+                data: product,
             })
         } catch (error: any) {
             res.status(400).json({

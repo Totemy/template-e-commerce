@@ -1,12 +1,13 @@
 import { AppDataSource } from '../../database/data-source'
-import { Product } from '../../database/entities/Product.entity'
-import { ProductImage } from '../../database/entities/ProductImage.entity'
+import { Product, Material } from '../../database/entities/Product.entity'
 import { ProductVariant } from '../../database/entities/ProductVariant.entity'
+import { Category } from '../../database/entities/Category.entity'
+import { In } from 'typeorm'
 
 export class ProductService {
     private productRepo = AppDataSource.getRepository(Product)
-    private imageRepo = AppDataSource.getRepository(ProductImage)
     private variantRepo = AppDataSource.getRepository(ProductVariant)
+    private categoryRepo = AppDataSource.getRepository(Category)
 
     async findAll(filters?: {
         categoryId?: string
@@ -14,47 +15,28 @@ export class ProductService {
         isNewArrival?: boolean
     }) {
         const query = this.productRepo
-            .createQueryBuilder()
-            .where({ isAvailable: true })
+            .createQueryBuilder('product')
+            .leftJoinAndSelect('product.categories', 'category')
+            .leftJoinAndSelect('product.variants', 'variant')
+            .where('product.isAvailable = :isAvailable', { isAvailable: true })
 
         if (filters?.categoryId) {
-            query.andWhere({
+            query.andWhere('category.id = :categoryId', {
                 categoryId: filters.categoryId,
             })
         }
         if (filters?.isFeatured) {
-            query.andWhere({
+            query.andWhere('product.isFeatured = :isFeatured', {
                 isFeatured: true,
             })
         }
         if (filters?.isNewArrival) {
-            query.andWhere({
+            query.andWhere('product.isNewArrival = :isNewArrival', {
                 isNewArrival: true,
             })
         }
 
-        const products = await query.getMany()
-
-        //upload images and variants
-        const productIds = products.map((p) => p.id)
-
-        const images = await this.imageRepo
-            .createQueryBuilder('image')
-            .where('image.productId IN (:...productIds)', { productIds })
-            .orderBy('image.displayOrder', 'ASC')
-            .getMany()
-        const variants = await this.variantRepo
-            .createQueryBuilder('variant')
-            .where('variant.productId IN (:...productIds)', { productIds })
-            .getMany()
-
-        //all in one
-        return products.map((product) => ({
-            ...product,
-            images: images.filter((img) => img.productId === product.id),
-            variants: variants.filter((v) => v.productId === product.id),
-        }))
-        //return products
+        return await query.orderBy('product.createdAt', 'DESC').getMany()
     }
 
     async findBySlug(slug: string) {
@@ -63,42 +45,77 @@ export class ProductService {
         if (!product) {
             throw new Error('Product not found')
         }
+        return product
+    }
 
-        const images = await this.imageRepo.find({
-            where: { productId: product.id },
-            order: { displayOrder: 'ASC' },
-        })
-
-        const variants = await this.variantRepo.find({
-            where: { productId: product.id },
-        })
-
-        return {
-            ...product,
-            images,
-            variants,
+    async findById(id: string) {
+        const product = await this.productRepo.findOne({ where: { id } })
+        if (!product) {
+            throw new Error('Product not found')
         }
+        return product
     }
     async create(data: {
-        categoryId: string
+        categoryIds: string[]
         name: string
         slug: string
         description: string
         price: number
         weight: number
-        metal: string
+        material: Material
         compareAtPrice?: number
+        images?: Array<{ url: string; altText?: string }>
+        variants?: Array<{
+            name: string
+            stockQuantity: number
+            priceAdjustment?: number
+        }>
     }) {
-        const product = this.productRepo.create({
-            ...data,
-            sku: `SJ-${Date.now()}`,
+        const existing = await this.productRepo.findOne({
+            where: { slug: data.slug },
+        })
+        if (existing) {
+            throw new Error('Product with this slug already exists')
+        }
+
+        const categories = await this.categoryRepo.findBy({
+            id: In(data.categoryIds),
         })
 
-        return await this.productRepo.save(product)
+        const product = this.productRepo.create({
+            name: data.name,
+            slug: data.slug,
+            description: data.description,
+            price: data.price,
+            weight: data.weight,
+            material: data.material,
+            compareAtPrice: data.compareAtPrice,
+            images: data.images || [],
+            categories,
+        })
+
+        const savedProduct = await this.productRepo.save(product)
+
+        if (data.variants && data.variants.length > 0) {
+            const variants = data.variants.map((v) =>
+                this.variantRepo.create({
+                    productId: savedProduct.id,
+                    name: v.name,
+                    stockQuantity: v.stockQuantity,
+                    priceAdjustment: v.priceAdjustment || 0,
+                }),
+            )
+            await this.variantRepo.save(variants)
+        }
+
+        return await this.findById(savedProduct.id)
     }
 
-    async update(id: string, data: Partial<Product>) {
-        const product = await this.productRepo.findOne({ where: { id } })
+    async update(
+        id: string,
+        data: Partial<Product> & { categoryIds?: string[] },
+    ) {
+        const product = await this.findById(id)
 
         if (!product) {
             throw new Error('Product not found')
@@ -114,6 +131,14 @@ export class ProductService {
             }
         }
 
+        if (data.categoryIds) {
+            const categories = await this.categoryRepo.findBy({
+                id: In(data.categoryIds),
+            })
+            product.categories = categories
+            delete data.categoryIds
+        }
+
         Object.assign(product, data)
 
         return await this.productRepo.save(product)
@@ -123,38 +148,65 @@ export class ProductService {
         await this.productRepo.delete(id)
     }
 
-    async addImages(
-        productId: string,
-        images: { url: string; altText?: string }[],
-    ) {
-        const imageEntities = images.map((img, index) =>
-            this.imageRepo.create({
-                productId,
-                url: img.url,
-                altText: img.altText,
-                displayOrder: index,
-                isPrimary: index === 0,
-            }),
+    async addCategories(productId: string, categoryIds: string[]) {
+        const product = await this.findById(productId)
+        const newCategories = await this.categoryRepo.findBy({
+            id: In(categoryIds),
+        })
+
+        const existingIds = product.categories.map((c) => c.id)
+        const uniqueCategories = newCategories.filter(
+            (c) => !existingIds.includes(c.id),
         )
-        return await this.imageRepo.save(imageEntities)
+
+        product.categories = [...product.categories, ...uniqueCategories]
+        return await this.productRepo.save(product)
     }
 
-    async deleteImage(imageId: string) {
-        await this.imageRepo.delete(imageId)
+    async removeCategory(productId: string, categoryId: string) {
+        const product = await this.findById(productId)
+        product.categories = product.categories.filter(
+            (cat) => cat.id !== categoryId,
+        )
+
+        return await this.productRepo.save(product)
+    }
+
+    async addImages(
+        productId: string,
+        images: Array<{ url: string; altText?: string }>,
+    ) {
+        const product = await this.findById(productId)
+        product.images.push(...images)
+        return await this.productRepo.save(product)
+    }
+
+    async deleteImage(productId: string, imageUrl: string) {
+        const product = await this.findById(productId)
+        product.images = product.images.filter((img) => img.url !== imageUrl)
+        return await this.productRepo.save(product)
     }
     async addVariants(
         productId: string,
-        variants: {
+        variants: Array<{
             name: string
             stockQuantity: number
-        }[],
+            priceAdjustment?: number
+        }>,
     ) {
+        const product = await this.productRepo.findOne({
+            where: { id: productId },
+        })
+        if (!product) {
+            throw new Error('Product not found')
+        }
+
         const variantEntities = variants.map((v) =>
             this.variantRepo.create({
                 productId,
                 name: v.name,
-                sku: `${productId}-${v.name}`,
                 stockQuantity: v.stockQuantity,
+                priceAdjustment: v.priceAdjustment || 0,
             }),
         )
         return await this.variantRepo.save(variantEntities)
@@ -177,33 +229,17 @@ export class ProductService {
         }
 
         Object.assign(variant, data)
-
         return await this.variantRepo.save(variant)
     }
 
     async deleteVariant(variantId: string) {
+        const variant = await this.variantRepo.findOne({
+            where: { id: variantId },
+        })
+        if (!variant) {
+            throw new Error('Variant not found')
+        }
+
         await this.variantRepo.delete(variantId)
-    }
-
-    private async attachImageAndVariants(products: Product[]) {
-        if (products.length === 0) return []
-
-        const productsIds = products.map((p) => p.id)
-
-        const images = await this.productRepo
-            .createQueryBuilder('image')
-            .where('image.productId in (:...productIds)', { productsIds })
-            .orderBy('image.displayOrder', 'ASC')
-            .getMany()
-        const variants = await this.variantRepo
-            .createQueryBuilder('variant')
-            .where('variant.productId IN (:...productIds)', { productsIds })
-            .getMany()
-
-        return products.map((product) => ({
-            ...product,
-            images: images.filter((img) => img.id === product.id),
-            variants: variants.filter((v) => v.productId === product.id),
-        }))
     }
 }
