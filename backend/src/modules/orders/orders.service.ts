@@ -7,6 +7,13 @@ import {
 import { OrderItem } from '../../database/entities/OrderItem.entity'
 import { Product } from '../../database/entities/Product.entity'
 import { ProductVariant } from '../../database/entities/ProductVariant.entity'
+import { Between } from 'typeorm'
+import { AtLeastOne } from '../../common/types/helpers'
+
+type FindOrderFilters = {
+    id?: string
+    status?: OrderStatus
+}
 
 export class OrdersService {
     private orderRepo = AppDataSource.getRepository(Order)
@@ -58,7 +65,7 @@ export class OrdersService {
         const items = orderItem.map((item) =>
             this.itemRepo.create({
                 ...item,
-                orderId: savedOrder.id,
+                order: savedOrder,
             }),
         )
 
@@ -70,57 +77,50 @@ export class OrdersService {
         }
     }
 
-    async findAll(filters?: { status?: OrderStatus }) {
-        const query = this.orderRepo.createQueryBuilder('order')
-
-        if (filters?.status) {
-            query.where('order.status = :status', { status: filters.status })
-        }
-
-        query.orderBy('order.createdAt', 'DESC')
-
-        return await query.getMany()
-    }
-
-    async findByID(id: string) {
-        const order = await this.orderRepo.findOne({ where: { id } })
-
-        if (!order) {
-            throw new Error('Order not found')
-        }
-
-        const items = await this.itemRepo.find({
-            where: { orderId: id },
+    async findOne(
+        filters: FindOrderFilters,
+        options?: {
+            withItems?: boolean
+        },
+    ) {
+        const order = await this.orderRepo.findOne({
+            where: filters,
+            relations: options?.withItems ? { items: true } : undefined,
         })
-
-        return {
-            ...order,
-            items,
-        }
-    }
-    async updateStatus(id: string, status: OrderStatus) {
-        const order = await this.orderRepo.findOne({ where: { id } })
-
         if (!order) {
             throw new Error('Order not found')
         }
+        return order
+    }
+
+    async findAll(filters?: { status?: OrderStatus }) {
+        return this.orderRepo.find({
+            where: {
+                ...(filters?.status && { status: filters.status }),
+            },
+            order: { createdAt: 'DESC' },
+        })
+    }
+
+    async findById(id: string) {
+        return this.findOne({ id }, { withItems: true })
+    }
+
+    async updateStatus(id: string, status: OrderStatus) {
+        const order = await this.findOne({ id })
 
         order.status = status
 
-        return await this.orderRepo.save(order)
+        return this.orderRepo.save(order)
     }
 
     async addTracking(id: string, trackingNumber: string) {
-        const order = await this.orderRepo.findOne({ where: { id } })
-
-        if (!order) {
-            throw new Error('Order not found')
-        }
+        const order = await this.findOne({ id })
 
         order.trackingNumber = trackingNumber
         order.status = OrderStatus.SHIPPED
 
-        return await this.orderRepo.save(order)
+        return this.orderRepo.save(order)
     }
 
     private async validateAndPrepareItems(
@@ -195,11 +195,11 @@ export class OrdersService {
         const startOfDay = new Date(date.setHours(0, 0, 0, 0))
         const endOfDay = new Date(date.setHours(23, 59, 59, 999))
 
-        const count = await this.orderRepo
-            .createQueryBuilder('order')
-            .where('order.createdAt >= :start', { start: startOfDay })
-            .andWhere('order.createdAt <= :end', { end: endOfDay })
-            .getCount()
+        const count = await this.orderRepo.count({
+            where: {
+                createdAt: Between(startOfDay, endOfDay),
+            },
+        })
         const sequence = String(count + 1).padStart(4, '0')
 
         return `SJ-${year}-${month}-${day}-${sequence}`

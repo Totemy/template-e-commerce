@@ -3,18 +3,25 @@ import {
     PrimaryGeneratedColumn,
     Column,
     CreateDateColumn,
+    ManyToOne,
+    JoinColumn,
 } from 'typeorm'
+import { Order } from './Order.entity'
+import { Product } from './Product.entity'
 
 @Entity('order_items')
 export class OrderItem {
     @PrimaryGeneratedColumn('uuid')
     id!: string
 
-    @Column()
-    orderId!: string
+    @ManyToOne(() => Order, (order) => order.items, {
+        onDelete: 'CASCADE',
+    })
+    @JoinColumn({ name: 'order_id' })
+    order!: Order
 
-    @Column()
-    productId!: string
+    @ManyToOne(() => Product)
+    product!: Product
 
     @Column({ nullable: true })
     variantId?: string

@@ -4,8 +4,9 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
+    OneToMany,
 } from 'typeorm'
-
+import { OrderItem } from './OrderItem.entity'
 export enum OrderStatus {
     PENDING = 'pending',
     CONFIRMED = 'confirmed',
@@ -74,6 +75,11 @@ export class Order {
 
     @Column({ nullable: true })
     trackingNumber?: string
+
+    @OneToMany(() => OrderItem, (item) => item.order, {
+        cascade: true,
+    })
+    items!: OrderItem[]
 
     @CreateDateColumn()
     createdAt!: Date

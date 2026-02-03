@@ -99,7 +99,7 @@ export class OrdersController {
         try {
             const { id } = req.params
 
-            const order = await orderService.findByID(id)
+            const order = await orderService.findById(id)
 
             res.status(200).json({
                 data: order,
