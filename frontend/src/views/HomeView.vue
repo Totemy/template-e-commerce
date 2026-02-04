@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { ProductService } from "./services/product.service";
+import { ProductService } from "../services/product.service";
 
 const products = ref([]);
 
