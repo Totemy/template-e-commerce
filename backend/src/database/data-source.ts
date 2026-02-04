@@ -7,7 +7,6 @@ import { ProductVariant } from './entities/ProductVariant.entity'
 import { Order } from './entities/Order.entity'
 import { OrderItem } from './entities/OrderItem.entity'
 import { RefreshToken } from './entities/RefreshToken.entity'
-//import 'dotenv/config'
 
 export const AppDataSource = new DataSource({
     type: 'postgres',
@@ -16,7 +15,7 @@ export const AppDataSource = new DataSource({
     username: config.db.user,
     password: config.db.password,
     database: config.db.name,
-    synchronize: true,
+    synchronize: false,
     logging: true,
     entities: [
         Admin,
