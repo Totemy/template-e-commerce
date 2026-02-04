@@ -1,22 +1,18 @@
 import { Request, Response, NextFunction } from 'express'
-import { verifyAccessToken } from '../utils/jwt'
-import { AppDataSource } from '../config/database'
-import { User, UserRole } from '../entities/User.entity'
+import jwt from 'jsonwebtoken'
+import { config } from '../../config/env'
+import { error } from 'console'
 
-declare global {
-    namespace Express {
-        interface Request {
-            user?: {
-                id: string
-                email: string
-                role: string
-            }
-        }
+export interface AuthRequest extends Request {
+    adminId?: string
+    admin?: {
+        id: string
+        email: string
     }
 }
 
-export const authenticate = async (
-    req: Request,
+export const authMiddleware = async (
+    req: AuthRequest,
     res: Response,
     next: NextFunction,
 ) => {
@@ -24,44 +20,51 @@ export const authenticate = async (
         const authHeader = req.headers.authorization
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Access token is required' })
+            return res.status(401).json({
+                error: 'No token provided',
+            })
         }
 
-        const token = authHeader.substring(7)
+        const token = authHeader.split(' ')[1]
 
-        const payload = verifyAccessToken(token)
-
-        const userRepository = AppDataSource.getRepository(User)
-        const user = await userRepository.findOne({
-            where: { id: payload.userId },
-        })
-
-        if (!user) {
-            return res.status(401).json({ error: 'User not found' })
+        if (!token) {
+            return res.status(401).json({
+                error: 'Invalid token format',
+            })
         }
 
-        req.user = {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-        }
+        try {
+            const decoder = jwt.verify(token, config.jwt.accessSecret) as {
+                adminId: string
+                email: string
+            }
 
-        next()
+            req.adminId = decoder.adminId
+            req.admin = {
+                id: decoder.adminId,
+                email: decoder.email,
+            }
+
+            next()
+        } catch (jwtError: any) {
+            if (jwtError.error === 'TokenExpiredError') {
+                return res.status(401).json({
+                    error: 'Token expired',
+                    code: 'TOKEN_EXPIRED',
+                })
+            }
+            if (jwtError.name === 'JsonWebTokenError') {
+                return res.status(401).json({
+                    error: 'Invalid token',
+                })
+            }
+
+            throw jwtError
+        }
     } catch (error: any) {
-        res.status(401).json({ error: error.message || 'Invalid token' })
-    }
-}
-
-export const authorizeRoles = (...roles: UserRole[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        if (!req.user) {
-            return res.status(401).json({ error: 'Unauthorized' })
-        }
-
-        if (!roles.includes(req.user.role as UserRole)) {
-            return res.status(403).json({ error: 'Access denied' })
-        }
-
-        next()
+        return res.status(500).json({
+            error: 'Authentication failed',
+            message: error.message,
+        })
     }
 }
