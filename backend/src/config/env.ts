@@ -23,4 +23,9 @@ export const config = {
         accessExpire: process.env.JWT_ACCESS_EXPIRE || '15m',
         refreshExpire: process.env.JWT_REFRESH_EXPIRE || '7d',
     },
+    cloudinary: {
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+        apiKey: process.env.CLOUDINARY_API_KEY || '',
+        apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+    },
 }
