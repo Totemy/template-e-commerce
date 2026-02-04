@@ -8,7 +8,6 @@ import { OrderItem } from '../../database/entities/OrderItem.entity'
 import { Product } from '../../database/entities/Product.entity'
 import { ProductVariant } from '../../database/entities/ProductVariant.entity'
 import { Between } from 'typeorm'
-import { AtLeastOne } from '../../common/types/helpers'
 
 type FindOrderFilters = {
     id?: string

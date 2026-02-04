@@ -2,10 +2,10 @@ import { AppDataSource } from '../../database/data-source'
 import { Category } from '../../database/entities/Category.entity'
 
 export class CategoriesService {
-    private repo = AppDataSource.getRepository(Category) // change name repo
+    private categoryRepo = AppDataSource.getRepository(Category)
 
     async findAll() {
-        return await this.repo.find({
+        return await this.categoryRepo.find({
             where: { isActive: true },
             order: {
                 displayOrder: 'ASC',
@@ -15,7 +15,7 @@ export class CategoriesService {
     }
 
     async findAllForAdmin() {
-        return await this.repo.find({
+        return await this.categoryRepo.find({
             order: {
                 displayOrder: 'ASC',
                 name: 'ASC',
@@ -24,7 +24,7 @@ export class CategoriesService {
     }
 
     async findBySlug(slug: string) {
-        const category = await this.repo.findOne({
+        const category = await this.categoryRepo.findOne({
             where: { slug, isActive: true },
         })
 
@@ -42,7 +42,7 @@ export class CategoriesService {
         imageUrl?: string
         displayOrder?: number
     }) {
-        const existing = await this.repo.findOne({
+        const existing = await this.categoryRepo.findOne({
             where: { slug: data.slug },
         })
 
@@ -50,8 +50,8 @@ export class CategoriesService {
             throw new Error('Category with this slug already exists')
         }
 
-        const category = this.repo.create(data)
-        return await this.repo.save(category)
+        const category = this.categoryRepo.create(data)
+        return await this.categoryRepo.save(category)
     }
 
     async update(
@@ -65,14 +65,14 @@ export class CategoriesService {
             isActive: boolean
         }>,
     ) {
-        const category = await this.repo.findOne({ where: { id } })
+        const category = await this.categoryRepo.findOne({ where: { id } })
 
         if (!category) {
             throw new Error('Category not found')
         }
 
         if (data.slug && data.slug !== category.slug) {
-            const existing = await this.repo.findOne({
+            const existing = await this.categoryRepo.findOne({
                 where: { slug: data.slug },
             })
 
@@ -83,7 +83,7 @@ export class CategoriesService {
 
         Object.assign(category, data)
 
-        return await this.repo.save(category)
+        return await this.categoryRepo.save(category)
     }
 
     async delete(id: string) {
@@ -98,11 +98,11 @@ export class CategoriesService {
             )
         }
 
-        await this.repo.delete(id)
+        await this.categoryRepo.delete(id)
     }
     async reorder(categoryOrders: { id: string; displayOrder: number }[]) {
         for (const { id, displayOrder } of categoryOrders) {
-            await this.repo.update(id, { displayOrder })
+            await this.categoryRepo.update(id, { displayOrder })
         }
 
         return await this.findAll()
