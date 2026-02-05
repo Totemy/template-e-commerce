@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ProductService } from '../services/product.service'
+import type { Product } from '../types/product'
 
-const products = ref([])
+const products = ref<Product[]>([])
 
 onMounted(async () => {
     const { data } = await ProductService.getAll()
