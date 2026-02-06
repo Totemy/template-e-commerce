@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { ProductService } from '../services/product.service'
 import type { Product } from '../types/product'
+import CategoryView from './CategoryView.vue'
 
 const products = ref<Product[]>([])
 
@@ -12,6 +13,7 @@ onMounted(async () => {
 </script>
 
 <template>
+    <CategoryView />
     <div>
         <h1>Products</h1>
         <div v-for="product in products" :key="product.id">

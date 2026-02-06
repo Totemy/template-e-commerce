@@ -10,15 +10,30 @@ export interface ProductVariant {
     stockQuantity: number
 }
 
+export interface Category {
+    id: string
+    name: string
+}
+
+export type Material =
+    | 'silver_925'
+    | 'gold_585'
+    | 'gold_750'
+    | 'platinum'
+    | 'steel'
+
 export interface Product {
     id: string
     name: string
-    slug: string
+    //slug: string
     description?: string
 
     price: number
-    compareAtPrice: number
+    //compareAtPrice: number
     weight: number
 
+    material: Material
+
     images: ProductImage[]
+    categories: Category[]
 }

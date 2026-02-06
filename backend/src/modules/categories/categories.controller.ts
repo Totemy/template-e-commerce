@@ -1,9 +1,10 @@
 import { Request, Response } from 'express'
 import { CategoriesService } from './categories.service'
 import { error } from 'console'
+import { Category } from '../../database/entities/Category.entity'
 
 const categoriesService = new CategoriesService()
-
+type CategoryResponse = { categories: Category[] }
 export class CategoriesController {
     /**
      * GET /api/categories
@@ -11,13 +12,11 @@ export class CategoriesController {
     async getAll(req: Request, res: Response) {
         try {
             const categories = await categoriesService.findAll()
-
-            res.status(200).json({
-                data: categories,
-            })
+            const categoryResp: CategoryResponse = { categories: categories }
+            res.status(200).json(categoryResp)
         } catch (error: any) {
             res.status(500).json({
-                error: error.message || 'Failed to fatch categories',
+                error: error.message || 'Failed to fetch categories',
             })
         }
     }
