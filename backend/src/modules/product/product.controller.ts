@@ -1,10 +1,9 @@
 import { Request, Response } from 'express'
 import { ProductService } from './product.service'
-import { error } from 'console'
-import { Material } from '../../database/entities/Product.entity'
+import { Material, Product } from '../../database/entities/Product.entity'
 
 const productService = new ProductService()
-
+type ProductResponse = { products: Product[] }
 export class ProductController {
     /**
      * GET /api/products
@@ -15,18 +14,14 @@ export class ProductController {
     async getAll(req: Request, res: Response) {
         try {
             const filters = {
-                categoryId: req.query.categoryId as string | undefined,
+                categoryId: req.query.categoryId as string,
                 isFeatured: req.query.isFeatured === 'true',
                 isNewArrival: req.query.isNewArrival === 'true',
-                search: req.query.search as string | undefined,
             }
 
             const products = await productService.findAll(filters)
-
-            res.status(200).json({
-                data: products,
-                count: products.length,
-            })
+            const productResp: ProductResponse = { products: products }
+            res.status(200).json(productResp)
         } catch (error: any) {
             res.status(500).json({
                 error: error.message || 'Failed to fetch products',

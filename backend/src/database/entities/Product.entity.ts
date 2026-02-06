@@ -10,6 +10,7 @@ import {
 } from 'typeorm'
 import { ProductVariant } from './ProductVariant.entity'
 import { Category } from './Category.entity'
+import { decimalTransformer } from '../../common/types/helpers'
 
 export enum Material {
     SILVER_925 = 'silver_925',
@@ -46,13 +47,29 @@ export class Product {
     @Column({ type: 'text' })
     description!: string
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        transformer: decimalTransformer,
+    })
     price!: number
 
-    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        nullable: true,
+        transformer: decimalTransformer,
+    })
     compareAtPrice?: number
 
-    @Column({ type: 'decimal', precision: 5, scale: 2 })
+    @Column({
+        type: 'decimal',
+        precision: 5,
+        scale: 2,
+        transformer: decimalTransformer,
+    })
     weight!: number
 
     @Column({

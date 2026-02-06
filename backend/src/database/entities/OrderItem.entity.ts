@@ -8,6 +8,7 @@ import {
 } from 'typeorm'
 import { Order } from './Order.entity'
 import { Product } from './Product.entity'
+import { decimalTransformer } from '../../common/types/helpers'
 
 @Entity('order_items')
 export class OrderItem {
@@ -37,10 +38,20 @@ export class OrderItem {
     @Column()
     quantity!: number
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        transformer: decimalTransformer,
+    })
     price!: number
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        transformer: decimalTransformer,
+    })
     subtotal!: number
 
     @CreateDateColumn()

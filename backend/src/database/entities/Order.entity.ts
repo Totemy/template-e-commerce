@@ -7,6 +7,7 @@ import {
     OneToMany,
 } from 'typeorm'
 import { OrderItem } from './OrderItem.entity'
+import { decimalTransformer } from '../../common/types/helpers'
 export enum OrderStatus {
     PENDING = 'pending',
     CONFIRMED = 'confirmed',
@@ -51,13 +52,28 @@ export class Order {
     })
     paymentMethod!: PaymentMethod
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        transformer: decimalTransformer,
+    })
     subtotal!: number
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        transformer: decimalTransformer,
+    })
     shippingCost!: number
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        transformer: decimalTransformer,
+    })
     total!: number
 
     @Column({ type: 'jsonb' })

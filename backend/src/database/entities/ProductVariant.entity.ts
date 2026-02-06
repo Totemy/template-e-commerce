@@ -8,6 +8,7 @@ import {
     JoinColumn,
 } from 'typeorm'
 import { Product } from './Product.entity'
+import { decimalTransformer } from '../../common/types/helpers'
 
 @Entity('product_variants')
 export class ProductVariant {
@@ -26,7 +27,13 @@ export class ProductVariant {
     @Column()
     name!: string
 
-    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        default: 0,
+        transformer: decimalTransformer,
+    })
     priceAdjustment!: number
 
     @Column({ default: 0 })

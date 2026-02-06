@@ -11,7 +11,7 @@ export class ProductService {
     private categoryRepo = AppDataSource.getRepository(Category)
 
     async findAll(filters?: {
-        categoryId?: string
+        categoryId: string
         isFeatured?: boolean
         isNewArrival?: boolean
     }) {
