@@ -1,3 +1,5 @@
+import type { Category } from './category'
+
 export interface ProductImage {
     url: string
     altText?: string
@@ -8,11 +10,6 @@ export interface ProductVariant {
     name: string
     priceAdjustment: string
     stockQuantity: number
-}
-
-export interface Category {
-    id: string
-    name: string
 }
 
 export type Material =

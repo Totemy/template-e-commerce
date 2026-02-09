@@ -1,5 +1,5 @@
 import { http } from '../api/http'
-import type { Category } from '../types/product'
+import type { Category } from '../types/category'
 
 export const CategoryService = {
     getAll() {
