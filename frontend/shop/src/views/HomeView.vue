@@ -18,21 +18,17 @@ const loadProducts = async () => {
     products.value = response.data.products
 }
 onMounted(async () => {
-    await loadCategories()
-    await loadProducts()
+    Promise.all([loadCategories(), loadProducts()])
 })
 
-const selectCategory = async (slug: string | null) => {
+const selectCategory = (slug: string | null) => {
     selectedCategorySlug.value = slug
 }
-const filteredProducts = computed(() => {
-    if (selectedCategorySlug.value === null) {
-        return products.value
-    }
+const filteredProducts = computed<Product[]>(() => {
+    const slug = selectedCategorySlug.value
+    if (!slug) return products.value
     return products.value.filter((product) =>
-        product.categories.some(
-            (cat) => cat.slug === selectedCategorySlug.value,
-        ),
+        product.categories.some((category) => category.slug === slug),
     )
 })
 </script>
@@ -61,6 +57,5 @@ const filteredProducts = computed(() => {
             <h2>{{ product.name }}</h2>
             <p>{{ product.price }}</p>
         </div>
-        {{}}
     </div>
 </template>
